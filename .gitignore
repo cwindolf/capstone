@@ -1,0 +1,6 @@
+reading/
+*.aux
+*.log
+*.bbl
+*.pyo
+*.pyc
