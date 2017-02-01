@@ -8,6 +8,7 @@ more assumptions hold.
 import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
+import pickle
 
 from .figconfig import FIG_PATH, figstyle
 from lib import common
@@ -33,18 +34,21 @@ for N in domain:
     T = sparse_price_tree(N, 2)
     ds = np.asarray(list(T.degree().values()))
     p = dd_from_ds(ds).astype(np.float64)
+    # we'll sum out to diameter below
+    M = nx.diameter(T)
 
     # Now, make Molloy&Reed graph targeting @ds, but only take its GC
     G = gcc_of_mr_targeting(T)
 
     # now, apply the transformation
-    def f(m): return (1 / (2 ** m) if m > 0 else m)
-    Tp = lsrg(T, f=f)
+    f = discrete_def([0.0, 0.5, 0.25, 0.125])
     Gp = lsrg(G, f=f)
-    # and get the empirically observed degree distribution
+    Tp = lsrg(T, f=f)
     p_G = dd_from_ds(list(Gp.degree().values()))
-    c_G.append(sum(k * p_k for k, p_k in enumerate(p_G)))
     p_T = dd_from_ds(list(Tp.degree().values()))
+    del T, G, Gp, Tp # these can get big, we don't need them anymore
+    # and get the empirically observed degree distribution
+    c_G.append(sum(k * p_k for k, p_k in enumerate(p_G)))
     c_T.append(sum(k * p_k for k, p_k in enumerate(p_T)))
 
 
@@ -52,26 +56,11 @@ for N in domain:
     # PGF prediction ************************************************************ #
     # *************************************************************************** #
 
-    # the PGF for the degree of a node in @Gp is:
-    #              ___
-    #     g_D(s) = | | g_p(g_r^i(g_f_i(s)))
-    #             i=0:M 
-    # where
-    M = nx.diameter(T)
-
-    # so we'll need the pgfs g_f_i for i=0:M
-    # these are bernoulli, so each takes value 1 wp f(m), 0 wp 1-f(m)
-    g_f = [bernoulli_pgf(f(m), ('g_f%d' % m)) for m in range(M + 1)]
-
     # and we need r and g_r
     r = neighbor_deg_dist(p).astype(np.float64)
 
-    # and do repeated differentiation stuff to get the pmf for D
-    # p_prime_predicted = generate_pmf(g_D, n)
+    # predict
     c_pred.append(pgf_predict_mean_degree(p, r, f, M))
-
-    # these can get big
-    del T, Tp, G, Gp
 
 
 # *************************************************************************** #
@@ -80,13 +69,16 @@ for N in domain:
 fig = plt.figure()
 ax = plt.gca()
 ax.set_xscale('log', basex=2)
-ax.set_xlabel('n')
-ax.set_ylabel('c')
-plt.scatter(domain, c_G, color='r', label='G')
-plt.scatter(domain, c_T, color='b', label='T')
-plt.scatter(domain, c_pred, color='g', label='Predicted')
-plt.legend()
+ax.set_xlabel('Order')
+ax.set_ylabel('Mean Degree')
+plt.scatter(domain, c_G, color='k', marker='x', label='Price LSRG')
+plt.scatter(domain, c_T, color='k', marker='o', label='M&R LSRG',
+            facecolors='none', edgecolors='k',)
+plt.scatter(domain, c_pred, marker='+', label='PGF Prediction')
+plt.legend(loc='upper left')
 plt.show()
 
-# run from ipython
+# save... these take a while to compute
+with open('fig5.dat', 'wb') as f:
+    pickle.dump((c_G, c_T, c_pred), f)
 

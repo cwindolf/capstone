@@ -1,3 +1,8 @@
+'''
+Test our degree distribution estimator (the convolution stuff).
+Spit out two figures: one for total variation of degree distributions
+as `n` increases, and one for the mean degree estimates vs. observation.
+'''
 import numpy as np
 from scipy.signal import fftconvolve as convolve
 from scipy.sparse import csc_matrix, csr_matrix
