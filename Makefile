@@ -1,11 +1,18 @@
 figure:
-	$(which python3) src/figure/make_all_figures.py
+	cd src && $(which python3) -m figures.figure2
+	cd src && $(which python3) -m figures.figure3
+	cd src && $(which python3) -m figures.figure4
+	cd src && $(which python3) -m figures.figure5
+	cd src && $(which python3) -m figures.figure6
 
 clean:
-	cd fig && rm -f *.png
-	cd tex && rm -f *.aux && rm *.bbl && rm *.log && rm *.pdf
+	# cd fig && rm -f *.png
+	cd tex && rm -f *.aux *.bbl *.log *.pdf
 
 pdf:
+	cd tex && pdflatex capstone.tex && bibtex capstone && pdflatex capstone.tex && pdflatex capstone.tex
+
+all:
 	clean
 	figure
-	cd tex && pdflatex capstone.tex && bibtex refs && pdflatex capstone.tex
+	pdf

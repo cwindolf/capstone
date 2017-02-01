@@ -16,8 +16,11 @@ To Build
 
 Run:
 
-    make pdf
+    make all
 
-Just to make the figures/see if the code is working, run:
+It needs Python 3 and PDFLaTeX, and the figures will take a while!
+Just to make the figures or see if the code is working, run:
 
     make figure
+
+See the `Makefile` for detail.

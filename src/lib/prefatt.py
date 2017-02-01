@@ -1,8 +1,9 @@
 import numpy as np
 import networkx as nx
 from numpy.random import rand, randint
-from statistics import dd
-from common import dense_star
+
+from .statistics import dd
+from .common import dense_star
 
 
 def dense_pref_att_graph(n, m0, m):

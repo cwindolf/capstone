@@ -5,7 +5,7 @@ from scipy.sparse import csc_matrix, csr_matrix
 from scipy.misc import comb
 from functools import reduce
 import networkx as nx
-from latent import d_fuzz
+from latent import lsrg
 from convolution import total_prob
 from common import dd_from_ds, discrete_def, F_mr, gcc, truncated_dot
 from prefatt import sparse_price_tree
@@ -32,7 +32,7 @@ G = gcc(mr_from_degree_distribution(n, p))
 # now, apply the transformation
 _f = [0.0, 0.8, 0.4, 0.2, 0.1]
 f = discrete_def(_f)
-Gp = d_fuzz(G, f=f)
+Gp = lsrg(G, f=f)
 # and get the empirically observed degree distribution
 p_prime_observed = dd_from_ds(list(Gp.degree().values()))
 c_prime_observed = sum(k * p_k for k, p_k in enumerate(p_prime_observed))

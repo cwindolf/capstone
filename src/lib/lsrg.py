@@ -1,13 +1,10 @@
-from numpy.random import uniform
 import networkx as nx
-from common import pairwise_dists
+from numpy.random import uniform
+
+from .common import pairwise_dists
 
 
-def inv(x): 
-    return 1.0 / x
-
-
-def d_fuzz(L, f=inv, directed=False):
+def lsrg(L, f, directed=False):
     '''
     Given a latent graph @L, observe a graph where the probability of
     connecting two nodes has some relation `f` to their distance in
@@ -20,7 +17,7 @@ def d_fuzz(L, f=inv, directed=False):
         directed: whether to treat latent graph as directed, and observe
            a directed graph.
     Return:
-        A: observed graph's adjacency matrix
+        G: the LSRG G_{L,f}
     '''
     n = L.number_of_nodes()
     G_prime = nx.Graph()

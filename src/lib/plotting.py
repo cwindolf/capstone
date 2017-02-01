@@ -2,9 +2,9 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from statistics import dd, jdd
 
-figstyle = { 'dpi': 150, 'bbox_inches':'tight', 'frameon': False }
+from .config import figstyle
+from .statistics import dd, jdd
 
 
 def plot_dd_and_jdd(A, title, save_to=None):
@@ -67,14 +67,9 @@ def distogram(A):
             if d <= 4:
                 lt4 += 1.0
             total += 1.0
-    print(lt4 / total)
     distarr = np.array(distarr)
-    print(distarr)
     nbins = np.amax(distarr) + 1
-    print(nbins)
     f, x = np.histogram(distarr, bins=np.arange(0, nbins, 1))
-    print(f)
-
     plt.figure()
     plt.bar(x[:-1], f)
     plt.show()

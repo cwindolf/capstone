@@ -1,11 +1,12 @@
 import numpy as np
 import numpy.linalg as la
-from common import choose2
+
+from .common import choose2
 
 
 def dd(A, dtype=np.float_):
     '''
-    Degree distribution
+    Degree distribution from adjacency matrix.
     '''
     return np.sum(A, axis=1, dtype=dtype)
 

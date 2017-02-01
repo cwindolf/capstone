@@ -1,6 +1,9 @@
 import networkx as nx
-from latent import d_fuzz
 from matplotlib import pyplot as plt
+
+from .figconfig import FIG_PATH, figstyle
+from ..lib.lsrg import lsrg
+
 
 # define the point mass at two
 def f(m):
@@ -30,7 +33,7 @@ Lep = nx.path_graph(8)
 # make LSRGs
 names = ['A',  'B', 'C', 'D', 'E', 'F']
 Ls    = [Ltri, Ltp, Lsq, Loc, Lec, Lep]
-Gs    = [d_fuzz(L, f) for L in Ls]
+Gs    = [lsrg(L, f) for L in Ls]
 
 # save the figure
 graph_style = { 'node_color': 'k', 'node_size': 50 }
@@ -40,4 +43,4 @@ for (L, G, a) in zip(Ls, Gs, names):
     nx.draw(L, pos=pos, ax=ax_L, **graph_style)
     nx.draw(G, pos=pos, ax=ax_G, **graph_style)
     plt.tight_layout(pad=0.15)
-    plt.savefig('fig/2_%s.png' % a, dpi=300)
+    plt.savefig(FIG_PATH % ('2_%s.png' % a), **figstyle)

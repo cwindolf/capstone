@@ -1,9 +1,10 @@
 import numpy as np
 import networkx as nx
-from nx_helpers import pairwise_tree_distance
 from scipy.special import comb
 from scipy.optimize import fsolve
-from pgf import single_pgf
+
+from .pgf import single_pgf
+from .nx_helpers import pairwise_tree_distance
 
 
 def truncated_dot(u, v):
