@@ -14,7 +14,11 @@ What's Here
 To Build
 --------
 
-Run:
+Just for the PDF, if you already have figures:
+
+    make pdf
+
+For everything, run:
 
     make all
 

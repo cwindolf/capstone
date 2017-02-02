@@ -23,14 +23,21 @@ def dd_from_ds(ds):
 
 
 def dense_star(k):
+    ''' 
+    adjacency matrix for the star graph on @k vertices. 
+    vertex 0 will be the center
+    '''
     A = np.zeros((k, k))
-    A[0, :] = A[:, 0] = 1.0
-    A[0, 0] = 0.0
+    A[0, 1:] = A[1:, 0] = 1
     return A
 
 
 def choose2(n):
     return comb(n, 2, exact=True)
+
+
+def binom(n, k, p):
+    return comb(n, k) * (p ** k) * ((1 - p) ** (n - k))
 
 
 def pairwise_dists(G):
@@ -73,4 +80,6 @@ def F_mr(p):
 
 def discrete_def(a):
     n = len(a)
-    return lambda x: a[x] if x < n and x >=0 else 0
+    def f(x):
+        return a[x] if x < n and x >=0 else 0
+    return f

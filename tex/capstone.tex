@@ -5,12 +5,14 @@
 \usepackage{amsmath}
 \usepackage{mathtools}
 \usepackage{amssymb}
+\usepackage{placeins}
 \usepackage{array}
 \usepackage{tabu}
 \usepackage{stmaryrd}
 \usepackage{enumitem}
 \usepackage{algpseudocode}
 \usepackage{graphicx}
+\usepackage{url}
 \graphicspath{{./../fig/}}
 \pagestyle{fancy}
 \lhead{\small Charlie Windolf}
@@ -533,11 +535,6 @@ Note that $c_r$ can be expressed simply in terms of generating functions,
 with $c_r = \frac{g_p''(1)}{g_p'(1)}$.\par
 
 
-\subsection{\textbf{\textsf{Notes on Simulation}}}
-
-hi
-
-
 \section{\textbf{\textsf{Degree Properties with Convolution Approach}}}
 
 \subsection{\textbf{\textsf{Branching as Convolution}}}
@@ -562,7 +559,10 @@ $i$. Then we can write
 \[
 z_m(i) = \sum_{j=0}^\infty r^j(i)z_{m-1}(j)\ ,
 \]
-after substituting $z_{m-1}(j)$ for $\P(Z_{m-1}=j)$.\par
+after substituting $z_{m-1}(j)$ for $\P(Z_{m-1}=j)$. For convenience,
+let $r^0$ be the point pmf at zero. This will help in simulation, where
+$r^0$ might arise as the pmf of how many kids a generation might have
+given that it just had none, which should always give zero again.\par
 
 Having the pmfs $z_m$ is helpful, but even better would be to have a pmf for
 the total $Z=\sum_m Z_m$. To do so, it will be helpful to observe that
@@ -591,8 +591,14 @@ new sequence of pmfs
 d_m(k) &\equiv \P(D_m=k) \\
        &= \sum_{j=0}^\infty \P(D_{v,m}=k \mid Z_m = j)\P(Z_m=j)\\
        &= \sum_{j=0}^\infty {j \choose k} f_m^k(1-f_m)^{j-k} u_m(j)\ .
-\end{align*}\par
-With these results in place, we can begin to calculate the pmf\[d(k)\equiv \P(D_v = k)\ .\]
+\end{align*}
+At this point, we can already produce a naive estimate for the expected mean
+degree $\E[D_v]$, by ignoring cross-generation effects and summing
+over the expectations of each of these pmfs. Mean degrees calculated
+with this estimate appear in Fig.~7.\par
+
+Less naively, with these results in place, we can begin to calculate the pmf
+\[d(k)\equiv \P(D_v = k)\ .\]
 Building off of the random variables $T_m$ defined above, define new random
 variables $U_0,U_1,\dotsc$ like \[U_m = \sum_{k=0}^m \sum_{\ell=1}^{Z_k} E_{m,\ell}\ ,\]
 where $E_{m,\ell}\thicksim_\iid \text{Bernoulli}(f_m)$ as above. Also, let
@@ -613,6 +619,13 @@ $U_{m+1}$ only depends on $Z_{m+1}$ and $Z_{m+1}$ only depends on $Z_m$. We use 
 result from above that the distribution of $Z_{m+1}$ given that $Z_m=\ell$ is $r^\ell$,
 and that $U_{m+1}$ given $Z_{m+1}$ is Binomial.\par
 
+Note that we have a basis from which each $\omega_m$ can be constructed. We know that
+$\omega_0(i, j) = \P(Z_0=i,U_0=j)$ can only be nonzero at $i=1$ and $j=0$ or $j=1$,
+since the zeroth generation of the branching process always has $Z_0=1$, leaving
+$U_0$ Bernoulli with success probability $f_m$. So we have:
+\[ \omega_0(i,j) = \begin{cases} 1 - f_m & (i,j)=(0,0) \\ f_m & (i,j)=(0,1) \\ 0 & \text{otherwise}\end{cases}\ .\]
+Plugging this into the recurrence above, any $\omega_m$ can be obtained.\par
+
 This expression is nice to have, but it is not so clear how to get from it to $d(k)$.
 In the last section, we were able to derive the clean expression $\P(Z=k)=\tau_k(0,k)$
 based on the insight that the branching process can take a maximum $k$ generations, with the
@@ -627,28 +640,92 @@ should be a (not strictly) monotone increasing quantity in $m$. Since it is boun
 we know it has a limit, so we can say \[ d(k) = \lim_{m\to\infty} u_m(k)\ ,\] if we define
 $u_m$ to be the marginal distribution
 \begin{align*}
-u_m(k)\equiv\sum_{\ell=0}^\infty \P(U_m=k \mid Z_m=\ell)\,\P(Z_m = \ell)
-= \sum_{\ell=0}^\infty \binom{\ell}{k} f_m^k (1 - f_m)^{\ell-k}\, z_m(\ell)\ .
+u_m(k)\equiv\sum_{\ell=0}^\infty \P(U_m=k, Z_m=\ell) = \sum_{\ell=0}^\infty \omega_m(k, \ell)\ .
 \end{align*}
-
-
-\subsection{\textbf{\textsf{Notes on Simulation}}}
-
-hi
-
 
 
 \section{\textbf{\textsf{Results From Simulation}}}
 
-\subsection{\textbf{\textsf{Figures}}}
-[TODO: I'm working on the figures]
+\subsection{\textbf{\textsf{Notes on Simulation}}}
 
-\subsection{\textbf{\textsf{Discussion}}}
-[TODO: I'm working on the figures]
+The simulations below were carried out in Python, making use of the scientific Python stack \cite{scipy} and
+the NetworkX \cite{networkx} package. All code used to produce the figures in this text has been
+released on GitHub \cite{thesourcecode}, including the main function for creating LSRGs, as well as some fast routines
+for making Price's model trees and Molloy and Reed random graphs, and for finding shortest pairwise
+distances in trees using Tarjan's offline lowest common ancestors algorithm \cite{tarjan1, tarjan2}.
+Unfortunately, that optimization is not available for finding pairwise distances in general graphs,
+which means that making LSRGs from Molloy and Reed random graphs tends to be slow.\par
 
+When computing the infinite sums above, especially when computing the estimates for the mean degree
+and the degree distribution for a given real graph, not the infinite graph imagined by the branching
+process intuition, our routines tend to only carry those sums out to the diameter of the graph, or to
+the end of $f$'s support, whichever is least. The intuition for this decision is that LSRGs generated
+from these graphs will not have pairs of nodes with distance greater than the diameter, so such pairs
+ought not to contribute to estimated degree statistics. Also, if $f$ only has support going from zero to
+some number $k$, the LSRG will not care about nodes separated further $k$ steps in the latent graph. We will
+later use this fact to help in cases where algorithms' complexity scales poorly with the graph's diameter.\par
+
+\subsection{\textbf{\textsf{Figures and Discussion}}}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=350pt]{5}
+\caption{Observed mean degrees for LSRGs produced using both latent Price trees and latent Molloy and
+Reed graphs targeting those trees, plotted with the PGF estimate for mean degree discussed in 4.3.
+Both LSRGs are generated using $f=(0, 0.5, 0.25, 0.125, 0, 0, \dotsc)$.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=300pt]{6}
+\caption{Distance matrices for latent graphs (top row; Price tree left, Molloy and Reed giant component
+right) and LSRGS generated from those latent graphs (bottom row). Cooler colors represent shorter
+pairwise distances, hotter colors represent longer ones, and white bands indicate unreachable nodes.
+All graphs have order $n=128$.}
+\end{center}
+\end{figure}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=350pt]{7}
+\caption{Observed and predicted mean degrees for the same exact graphs as in 6, this time
+using the naive estimate for mean degree given in the convolution section above.}
+\end{center}
+\end{figure}
+
+
+Fig.~5 is both encouraging and discouraging. On the one hand, it does seem that the PGF estimate for
+mean degree $\frac{c}{c_r}g_f(c_r)$ does converge with the mean degrees observed in representative
+Molloy and Reed LSRGs. On the other hand, the predictions are wildy inaccurate when it comes to
+the Price LSRGs, whose mean degree is consistently smaller. This disparity suggests that the
+distance properties of the Price latent graph diverge significantly from those of the Molloy and Reed
+latent graph, which is confirmed in Fig.~6. There is a range of literature discussing these sorts
+of structural differences, including \cite{GrisiFilho2013, Dommers2010, hofstad05}.\par
+
+Studying the distance matrix for the LSRG generated from the price tree, though, we do observe
+some interesting effects. The general characteristic of smaller distances in the upper left (nodes
+added earlier in the Price process) is maintained, but there are also many unreachable nodes. In
+more detail, a white matrix pixel indicates infinite distance, but notice that they always form
+lines which meet on the main diagonal. Each pair of white bands that crosses on the main diagonal
+indicates an unreachable node. Comparing this matrix with its Molloy and Reed counterpart, we
+can observe that it seems much more structured, much less `mixed,' and that it has a much higher
+variance over distances. So, as should be expected, it seems that the Molloy and Reed process
+erases a lot of the community or hierarchy structure that was present in the Price tree. That said,
+some of the patterns that were present in the Molloy and Reed latent graph are maintained in its
+LSRG, looking similar but `fuzzier' after the transformation.\par
+
+Fig.~7 shows the naive estimate for mean degree using convolutions, which seems not to converge
+like the pgf estimate did. The difference indicates that intergenerational dependence is a significant
+factor, and that ignoring it like this naive estimator does is not the best approach. It might
+be that the $u_m$ estimator will fix this problem, but that will be left for future work.
+Across estimators, it should be noted that they only make sense as the graph gets large, and
+when $f$'s support does not approach the fringes of the graph, where the branching process
+intuition breaks down.
 
 
 \newpage
+\clearpage
 \bibliography{capstone}
 \bibliographystyle{ieeetr}
 
